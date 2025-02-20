@@ -1,0 +1,26 @@
+name: OWASP ZAP Scan
+
+on: [push, pull_request]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Start ZAP
+        run: docker run -u zap -p 8080:8080 -d owasp/zap2docker-stable zap.sh -daemon -port 8080 -host 0.0.0.0
+
+      - name: Wait for ZAP to start
+        run: sleep 30
+
+      - name: Run ZAP Scan
+        run: docker exec owasp/zap2docker-stable zap-baseline.py -t http://example.com -r zap_report.html
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap-report
+          path: zap_report.html
